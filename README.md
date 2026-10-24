@@ -6,7 +6,7 @@ Interfața DinSat, pregătită pentru **React și JavaScript**, cu Vite ca instr
 
 ## Organizare
 
-Folosim o structură pe funcționalități, inspirată de Clean Architecture. Fiecare funcționalitate separă logica independentă de UI, cazurile de utilizare, accesul la API și componentele React.
+Folosim Clean Architecture cu organizare mai întâi pe straturi. Directoarele `domain`, `application`, `infrastructure` și `presentation` apar o singură dată în `src/`. În fiecare strat, `features/` grupează fișierele după funcționalitate.
 
 ```text
 din_sat_front/
@@ -17,22 +17,21 @@ din_sat_front/
 │   │   ├── providers/             # Context și furnizori React la nivel de aplicație
 │   │   ├── config/                # Configurație publică, inclusiv adresa API-ului
 │   │   └── container/             # Conectarea cazurilor de utilizare la adaptoare
-│   ├── features/
-│   │   ├── auth/
-│   │   ├── catalog/
-│   │   ├── producers/
-│   │   ├── cart/
-│   │   ├── orders/
-│   │   ├── pickup/
-│   │   ├── dashboard/
-│   │   ├── ai/
-│   │   └── billing/
+│   ├── domain/
+│   │   └── features/              # Modele și reguli independente de UI
+│   ├── application/
+│   │   └── features/              # Cazuri de utilizare și porturi pentru API / stocare
+│   ├── infrastructure/
+│   │   ├── features/              # Adaptoare API, mapări DTO și stocare pe funcționalități
+│   │   └── http/                  # Client HTTP și tratarea comună a erorilor API
+│   ├── presentation/
+│   │   ├── features/              # Pagini, componente, hook-uri și stare React
+│   │   └── shared/
+│   │       ├── ui/                # Controale vizuale reutilizabile
+│   │       ├── hooks/             # Hook-uri generale pentru UI
+│   │       └── styles/            # Stiluri globale și variabile vizuale
 │   ├── shared/
-│   │   ├── ui/                    # Controale vizuale reutilizabile
-│   │   ├── hooks/                 # Hook-uri generale, fără reguli de feature
-│   │   ├── api/                   # Client HTTP și tratarea comună a erorilor API
-│   │   ├── lib/                   # Utilitare independente de React
-│   │   └── styles/                # Stiluri globale și variabile vizuale
+│   │   └── lib/                   # Utilitare independente de React
 │   └── assets/
 │       ├── images/
 │       ├── icons/
@@ -47,26 +46,33 @@ din_sat_front/
     └── fixtures/
 ```
 
-Fiecare director din `src/features/` conține aceeași structură:
+Fiecare director `features/` din cele patru straturi conține aceleași funcționalități:
 
 ```text
-cart/                              # Exemplu valabil pentru fiecare funcționalitate
-├── domain/                        # Modele, reguli locale și transformări pure
-├── application/                   # Cazuri de utilizare și porturi pentru API / stocare
-├── infrastructure/                # Apeluri API, mapări DTO și adaptoare de stocare
-└── presentation/                  # Pagini, componente, hook-uri și stare React
+features/
+├── auth/
+├── catalog/
+├── producers/
+├── cart/
+├── orders/
+├── pickup/
+├── dashboard/
+├── ai/
+└── billing/
 ```
 
-Directoarele interioare se adaugă când apare codul care le justifică. De exemplu, `presentation/` poate primi ulterior `pages/`, `components/` și `hooks/`.
+De exemplu, autentificarea are modelele și regulile locale în `src/domain/features/auth/`, cazurile de utilizare și porturile în `src/application/features/auth/`, adaptoarele API în `src/infrastructure/features/auth/` și componentele React în `src/presentation/features/auth/`. Fișierele necesare vor fi adăugate în directorul funcționalității din stratul corespunzător; momentan fiecare conține doar `.gitkeep`.
+
+Directoarele interioare se adaugă când apare codul care le justifică. De exemplu, `presentation/features/auth/` poate primi ulterior `pages/`, `components/` și `hooks/`.
 
 ## Reguli de dependență
 
 - `domain` conține JavaScript independent de React, HTTP și API-urile browserului.
 - `application` folosește domeniul și definește contractele pentru operațiile externe. Nu importă componente sau implementări HTTP.
-- `infrastructure` implementează aceste contracte prin clientul din `shared/api` sau prin stocarea browserului. Maparea răspunsurilor API în modele locale se face aici.
+- `infrastructure/features/<nume>/` implementează aceste contracte prin clientul din `infrastructure/http/` sau prin stocarea browserului. Maparea răspunsurilor API în modele locale se face aici.
 - `presentation` afișează datele și apelează cazurile de utilizare. Hook-urile React și starea UI rămân aici.
 - `app/container` conectează adaptoarele la cazurile de utilizare; `app/providers` le face disponibile interfeței.
-- Funcționalitățile comunică prin contracte explicite; nu importă componente sau adaptoare interne ale altor funcționalități. `shared` nu importă din `features` sau `app`.
+- Funcționalitățile comunică prin contracte explicite; nu importă componente sau adaptoare interne ale altor funcționalități. `shared/lib/` conține utilitare independente de straturile aplicației; `presentation/shared/` conține elemente UI comune, fără dependențe de funcționalități sau `app`.
 
 Fluxul unei acțiuni: componentă / hook → caz de utilizare → port → adaptor API → backend. Adaptorul concret este conectat din `app`.
 
@@ -92,7 +98,7 @@ Frontend-ul accesează backend-ul exclusiv prin HTTP. Contractul canonic va fi �
 
 Frontend-ul nu se conectează direct la baza de date. Tehnologia și schema acesteia se stabilesc separat, în spatele API-ului. Cheile private pentru baza de date, AI și plăți aparțin backend-ului.
 
-Starea temporară a interfeței rămâne în componente sau hook-uri; filtrele partajabile pot sta în URL. Coșul poate folosi un reducer pur și un provider în `features/cart/presentation/`. Totalurile afișate sunt orientative până la validarea serverului; prețurile finale, stocul și permisiunile sunt stabilite de backend.
+Starea temporară a interfeței rămâne în componente sau hook-uri; filtrele partajabile pot sta în URL. Coșul poate avea reducerul pur în `domain/features/cart/` și providerul React în `presentation/features/cart/`. Totalurile afișate sunt orientative până la validarea serverului; prețurile finale, stocul și permisiunile sunt stabilite de backend.
 
 ## Lucrul în submodul
 
