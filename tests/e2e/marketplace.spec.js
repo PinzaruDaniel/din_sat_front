@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+async function placeOrder(page) {
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === '/api/v1/orders' &&
+      response.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Confirmă comanda' }).click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(201);
+  return response.json();
+}
+
+function orderCard(page, order) {
+  return page
+    .locator('.order-card')
+    .filter({ hasText: `Comanda #${order.id.slice(0, 8)}` });
+}
+
 test('marketplace filters, login, checkout, refresh, cancellation and logout use the real API', async ({
   page,
 }) => {
@@ -34,20 +52,19 @@ test('marketplace filters, login, checkout, refresh, cancellation and logout use
     page.getByRole('heading', { name: 'Coșul tău cu bunătăți.' }),
   ).toBeVisible();
   await page.getByLabel('Alege ridicarea').selectOption({ index: 1 });
-  await page.getByRole('button', { name: 'Confirmă comanda' }).click();
+  const order = await placeOrder(page);
   await expect(
     page.getByRole('status').filter({ hasText: 'Comanda a fost plasată' }),
   ).toBeVisible();
-  const newest = page.locator('.order-card').last();
-  await expect(newest).toContainText('35 lei');
+  const createdOrder = orderCard(page, order);
+  await expect(createdOrder).toHaveCount(1);
+  await expect(createdOrder).toContainText('35 lei');
   await page.reload();
   await expect(
     page.getByRole('heading', { name: 'Comenzile tale.' }),
   ).toBeVisible();
-  await newest.getByRole('button', { name: 'Anulează comanda' }).click();
-  await expect(
-    page.locator('.order-card').last().locator('.status'),
-  ).toHaveText('Anulată');
+  await createdOrder.getByRole('button', { name: 'Anulează comanda' }).click();
+  await expect(createdOrder.locator('.status')).toHaveText('Anulată');
   await page.getByRole('button', { name: 'Deconectare' }).click();
   await page.goto('/orders');
   await expect(page).toHaveURL(/\/login\?redirect=/);
@@ -104,24 +121,28 @@ test('producer can register and publish a product visible in the real catalog', 
   await buyer.getByRole('button', { name: 'Adaugă în coș' }).click();
   await buyer.getByRole('link', { name: /Coșul meu/ }).click();
   await buyer.getByLabel('Alege ridicarea').selectOption({ index: 1 });
-  await buyer.getByRole('button', { name: 'Confirmă comanda' }).click();
+  const order = await placeOrder(buyer);
   await expect(
     buyer.getByRole('heading', { name: 'Comenzile tale.' }),
   ).toBeVisible();
   await page.goto('/orders');
+  const producerOrder = orderCard(page, order);
+  await expect(producerOrder).toHaveCount(1);
   for (const status of [
     'Confirmată',
     'În pregătire',
     'Gata de ridicare',
     'Finalizată',
   ]) {
-    await page.getByRole('button', { name: status, exact: true }).click();
-    await expect(page.locator('.status')).toHaveText(status);
+    await producerOrder
+      .getByRole('button', { name: status, exact: true })
+      .click();
+    await expect(producerOrder.locator('.status')).toHaveText(status);
   }
   await buyer.reload();
-  await expect(
-    buyer.locator('.order-card').last().locator('.status'),
-  ).toHaveText('Finalizată');
+  await expect(orderCard(buyer, order).locator('.status')).toHaveText(
+    'Finalizată',
+  );
   await buyerContext.close();
 });
 

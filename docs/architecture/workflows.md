@@ -10,6 +10,16 @@
 
 Clientul nu reîncearcă automat cereri de scriere. Un token CSRF expirat este invalidat local; utilizatorul poate reîncerca explicit. La o comandă, cheia de idempotență este aceeași pentru retry al unui payload identic și se schimbă când se schimbă produsele, cantitățile sau ridicarea.
 
+## Răspunsuri și indisponibilitate
+
+Clientul păstrează erorile structurate ale API-ului, inclusiv `code`, `fieldErrors` și `requestId`. O eroare de proxy fără JSON, cum ar fi o pagină HTML 502/503, devine `SERVICE_UNAVAILABLE`, cu mesaj în română. Un răspuns de succes gol, invalid sau fără obiectul JSON așteptat devine `INVALID_RESPONSE`; excepțiile de parsare nu ajung în interfață. Lipsa conexiunii sau întreruperea citirii răspunsului devine `NETWORK_ERROR`. `AbortError` este păstrat pentru ca anularea căutărilor vechi să nu fie afișată ca eroare.
+
+Un răspuns HTTP 401 pe o resursă privată emite evenimentul de sesiune expirată chiar dacă răspunsul nu conține JSON. Răspunsul 204 este acceptat fără corp, de exemplu la logout.
+
+## Persistență PostgreSQL
+
+Frontend-ul folosește același contract HTTP în modul PostgreSQL. Conexiunea, schema și încărcarea datelor demo aparțin backend-ului; datele aplicației nu mai depind de memoria unui proces API. Testele end-to-end trebuie rulate cu API-ul și baza de date pregătite conform README-ului backend. Pentru verificarea persistenței, o comandă creată înainte de restart trebuie să poată fi citită după repornirea API-ului.
+
 ## Cum adaugi o funcționalitate
 
 Adaugă regulile pure în `domain/features/<nume>`, operațiile în `application/features/<nume>`, adaptorul HTTP în `infrastructure/features/<nume>` și pagina în `presentation/features/<nume>`. Conectează adaptorul în `app/container/services.js`. Extrage UI comun doar când există o responsabilitate reutilizabilă: Button, Field, feedback și încărcare.

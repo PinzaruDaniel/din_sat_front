@@ -14,7 +14,9 @@ npm run dev
 
 Deschide `http://localhost:5173` (aceasta este originea permisă implicit de API). Vite transmite `/api` către `http://127.0.0.1:3001`. Dacă deschizi frontend-ul prin alt hostname sau port, setează și `APP_ORIGIN` pe backend. `API_PROXY_TARGET` configurează proxy-ul doar la development; `VITE_API_BASE_URL` este adresa publică, implicit `/api/v1`. Nu introduce secrete în variabile `VITE_*`.
 
-Cont demo: `buyer@dinsat.demo` / `DinSatDemo2026!`. Există și `producer@dinsat.demo`, cu aceeași parolă. Poți înregistra alte conturi de cumpărător sau producător. Datele demo și sesiunile se pierd la repornirea API-ului.
+Cont demo: `buyer@dinsat.demo` / `DinSatDemo2026!`. Există și `producer@dinsat.demo`, cu aceeași parolă, după încărcarea datelor demo conform README-ului API. Poți înregistra alte conturi de cumpărător sau producător.
+
+În modul PostgreSQL, datele aplicației sunt păstrate în baza de date și rămân disponibile după repornirea API-ului. Sesiunile valide sunt păstrate și ele când backend-ul folosește același secret de sesiune. Pregătește conexiunea, schema și datele demo urmând instrucțiunile din `../din_sat_api/README.md`. Contractul HTTP al frontend-ului rămâne același; browserul nu accesează direct PostgreSQL.
 
 ## Fluxuri implementate
 
@@ -47,12 +49,12 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Scenariile verifică filtrarea, login, checkout, refresh, anulare, logout, publicarea, ridicarea și finalizarea comenzilor, plus pagini la 360 px. `node scripts/capture-preview.mjs` salvează capturi în `/tmp/dinsat-preview`; poți seta `PREVIEW_OUTPUT`.
+Scenariile verifică filtrarea, login, checkout, refresh, anulare, logout, publicarea, ridicarea și finalizarea comenzilor, plus pagini la 360 px. Testele identifică exact comanda creată prin ID-ul returnat de API și pot fi rerulate cu istoricul deja prezent în PostgreSQL, fără resetarea bazei. Ele adaugă conturi, produse, ridicări și comenzi de test. `node scripts/capture-preview.mjs` salvează capturi în `/tmp/dinsat-preview`; poți seta `PREVIEW_OUTPUT`.
 
 ## Organizare
 
 `domain/features/` conține reguli pure: validarea locală a credențialelor, reducerul coșului și conversia datei de ridicare. `application/features/` definește operațiile folosite de UI. `infrastructure/features/` le implementează prin clientul HTTP comun. `presentation/features/` conține pagini și componente; `presentation/shared/` conține controale și hook-uri generale. `app/container/` injectează adaptoarele, `app/providers/` compune furnizorii, iar `app/router/` declară rutele.
 
-Flux: componentă / hook → operație de aplicație → adaptor HTTP → API. Clientul HTTP gestionează cookie-urile, CSRF și erorile. Sesiunea nu folosește tokenuri în localStorage. Frontend-ul nu importă cod backend și nu se conectează direct la DB.
+Flux: componentă / hook → operație de aplicație → adaptor HTTP → API. Clientul HTTP gestionează cookie-urile, CSRF și erorile. Erorile de proxy, inclusiv răspunsurile HTML 502/503, sunt prezentate ca indisponibilitate a serverului; un răspuns de succes care nu respectă formatul API devine o eroare lizibilă. Cererile anulate nu afișează erori de rețea și cererile de scriere nu sunt reîncercate automat. Sesiunea nu folosește tokenuri în localStorage. Frontend-ul nu importă cod backend și nu se conectează direct la DB.
 
 Contractul canonic este în `../din_sat_api/docs/api/openapi.yaml`. Regulile, prețurile, stocul și identitatea sunt validate de server.
