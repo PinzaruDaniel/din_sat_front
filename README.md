@@ -18,6 +18,14 @@ Cont demo: `buyer@dinsat.demo` / `DinSatDemo2026!`. Există și `producer@dinsat
 
 În modul PostgreSQL, datele aplicației sunt păstrate în baza de date și rămân disponibile după repornirea API-ului. Sesiunile valide sunt păstrate și ele când backend-ul folosește același secret de sesiune. Pregătește conexiunea, schema și datele demo urmând instrucțiunile din `../din_sat_api/README.md`. Contractul HTTP al frontend-ului rămâne același; browserul nu accesează direct PostgreSQL.
 
+## Publicare pe Render
+
+Publică ramura frontendului care include `render.yaml`. În Render alege **New → Blueprint**, conectează repository-ul `PinzaruDaniel/din_sat_front` și selectează ramura publicată. Blueprint-ul construiește aplicația cu Node.js 24, publică `dist` și configurează regulile pentru API și navigarea React. [Documentația Render](https://render.com/docs/redirects-rewrites)
+
+În serviciul **dinsat-api**, setează `APP_ORIGIN` la originea exactă a site-ului frontend afișată în Render, fără slash la final. Cererile browserului folosesc `/api/v1` pe adresa frontendului și sunt transmise către API-ul public.
+
+După deploy, deschide `/api/v1/ready` la adresa frontendului și verifică răspunsul `{"status":"ready"}`. Deschide `/login` direct și testează înregistrarea, autentificarea și păstrarea sesiunii după refresh cu un cont de test creat pe mediul public.
+
 ## Fluxuri implementate
 
 - Catalog cu filtre combinate în URL, sortare, paginare și anularea cererilor vechi.

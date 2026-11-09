@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: dinsat-front
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: '24.x'
+      - key: SKIP_INSTALL_DEPS
+        value: 'true'
+      - key: VITE_API_BASE_URL
+        value: /api/v1
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://dinsat-api.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
