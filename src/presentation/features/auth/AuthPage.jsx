@@ -15,6 +15,23 @@ import { useAuth } from './AuthContext.js';
 import { validateCredentials } from '../../../domain/features/auth/validateCredentials.js';
 import { Button } from '../../shared/ui/Button.jsx';
 import { Field } from '../../shared/ui/Field.jsx';
+
+function redirectPath(value) {
+  if (!value?.startsWith('/')) return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (
+      url.origin === window.location.origin &&
+      !url.pathname.startsWith('//') &&
+      !['/login', '/register'].includes(url.pathname)
+    )
+      return url.pathname + url.search + url.hash;
+  } catch {
+    // Ignore malformed redirect targets.
+  }
+  return null;
+}
+
 export function AuthPage({ registering = false }) {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -29,14 +46,7 @@ export function AuthPage({ registering = false }) {
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  const from = params.get('redirect');
-  const destination =
-    from &&
-    from.startsWith('/') &&
-    !from.startsWith('//') &&
-    !['/login', '/register'].includes(from.split('?')[0])
-      ? from
-      : null;
+  const destination = redirectPath(params.get('redirect'));
   if (auth.user)
     return (
       <Navigate

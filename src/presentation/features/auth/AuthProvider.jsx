@@ -20,10 +20,14 @@ export function AuthProvider({ children }) {
     );
     const expire = () =>
       setSession({ user: null, loading: false, error: null });
+    const refresh = ({ detail: user }) =>
+      setSession({ user, loading: false, error: null });
     window.addEventListener('dinsat:session-expired', expire);
+    window.addEventListener('dinsat:session-refreshed', refresh);
     return () => {
       active = false;
       window.removeEventListener('dinsat:session-expired', expire);
+      window.removeEventListener('dinsat:session-refreshed', refresh);
     };
   }, [auth]);
   async function authenticate(action, input) {

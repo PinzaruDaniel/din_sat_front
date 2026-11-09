@@ -7,8 +7,19 @@ export function createCatalogApi(http) {
       ),
     details: (id, signal) =>
       http.request(`/products/${encodeURIComponent(id)}`, { signal }),
-    producers: (signal) => http.request('/producers', { signal }),
+    owned: (signal) => http.request('/producer/products', { signal }),
     create: (input) =>
-      http.request('/products', { method: 'POST', body: input }),
+      http.request('/producer/products', { method: 'POST', body: input }),
+    update: (id, input) =>
+      http.request(`/producer/products/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: input,
+      }),
+    archive: (id) =>
+      http.request(`/producer/products/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    upload: (file) =>
+      http.request('/producer/uploads', { method: 'POST', body: file }),
   };
 }

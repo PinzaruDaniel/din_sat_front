@@ -1,0 +1,37 @@
+.assistant {
+  max-width: 740px;
+}
+
+.assistant-form,
+.assistant-card {
+  display: grid;
+  gap: 12px;
+  margin-block: 20px;
+}
+
+.assistant-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+
+.assistant-card p,
+.assistant-card ul {
+  margin: 0;
+}
+
+.assistant-form textarea {
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.assistant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

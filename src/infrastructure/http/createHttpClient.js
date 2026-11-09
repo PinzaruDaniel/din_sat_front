@@ -27,6 +27,7 @@ export function createHttpClient({ baseUrl }) {
   let sessionRequest;
   async function request(path, { method = 'GET', body, headers, signal } = {}) {
     if (method !== 'GET' && !csrfToken) await getSession();
+    const binaryBody = body instanceof Blob;
     let response;
     try {
       response = await fetch(`${baseUrl}${path}`, {
@@ -34,11 +35,13 @@ export function createHttpClient({ baseUrl }) {
         signal,
         credentials: 'include',
         headers: {
-          ...(body ? { 'Content-Type': 'application/json' } : {}),
+          ...(body
+            ? { 'Content-Type': binaryBody ? body.type : 'application/json' }
+            : {}),
           ...(method !== 'GET' ? { 'X-CSRF-Token': csrfToken } : {}),
           ...headers,
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: binaryBody ? body : body ? JSON.stringify(body) : undefined,
       });
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
@@ -56,9 +59,25 @@ export function createHttpClient({ baseUrl }) {
     const hasBody =
       result !== null && typeof result === 'object' && !Array.isArray(result);
     if (!response.ok) {
-      if (response.status === 401 && !path.startsWith('/auth/'))
+      if (response.status === 401 && !path.startsWith('/auth/')) {
+        csrfToken = undefined;
         window.dispatchEvent(new Event('dinsat:session-expired'));
-      if (hasBody && result.code === 'CSRF_INVALID') csrfToken = undefined;
+      }
+      if (method !== 'GET' && hasBody && result.code === 'CSRF_INVALID') {
+        csrfToken = undefined;
+        try {
+          const session = await getSession();
+          window.dispatchEvent(
+            session.user
+              ? new CustomEvent('dinsat:session-refreshed', {
+                  detail: session.user,
+                })
+              : new Event('dinsat:session-expired'),
+          );
+        } catch {
+          // Preserve the error from the original mutation.
+        }
+      }
       throw new ApiError(
         response.status,
         hasBody

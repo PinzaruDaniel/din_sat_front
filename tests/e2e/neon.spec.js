@@ -81,7 +81,7 @@ test('Neon PostgreSQL persists a real browser marketplace flow without demo seed
     '/pickup-slots',
     page.getByRole('button', { name: 'Adaugă intervalul' }),
   );
-  await expect(page.locator('.pickup-list')).toContainText(
+  await expect(page.locator('.pickup-slot-list')).toContainText(
     'Neon verification',
     {
       timeout: 20000,
@@ -117,6 +117,9 @@ test('Neon PostgreSQL persists a real browser marketplace flow without demo seed
     await buyer.reload();
     await card(buyer, cancelled)
       .getByRole('button', { name: 'Anulează comanda' })
+      .click();
+    await card(buyer, cancelled)
+      .getByRole('button', { name: 'Confirmă anularea' })
       .click();
     await expect(card(buyer, cancelled).locator('.status')).toHaveText(
       'Anulată',

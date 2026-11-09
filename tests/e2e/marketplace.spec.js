@@ -63,8 +63,15 @@ test('marketplace filters, login, checkout, refresh, cancellation and logout use
   await expect(
     page.getByRole('heading', { name: 'Comenzile tale.' }),
   ).toBeVisible();
-  await createdOrder.getByRole('button', { name: 'Anulează comanda' }).click();
-  await expect(createdOrder.locator('.status')).toHaveText('Anulată');
+  await createdOrder.getByRole('link', { name: /Comanda #/ }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Detaliile comenzii' }),
+  ).toBeVisible();
+  await expect(page.locator('.order-card')).toContainText('Europe/Chisinau');
+  await page.getByRole('button', { name: 'Anulează comanda' }).click();
+  await expect(page.locator('.status')).toHaveText('Nouă');
+  await page.getByRole('button', { name: 'Confirmă anularea' }).click();
+  await expect(page.locator('.status')).toHaveText('Anulată');
   await page.getByRole('button', { name: 'Deconectare' }).click();
   await page.goto('/orders');
   await expect(page).toHaveURL(/\/login\?redirect=/);
@@ -108,7 +115,9 @@ test('producer can register and publish a product visible in the real catalog', 
   const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   await page.getByLabel('Data ridicării').fill(tomorrow);
   await page.getByRole('button', { name: 'Adaugă intervalul' }).click();
-  await expect(page.locator('.pickup-list')).toContainText('Piața centrală');
+  await expect(page.locator('.pickup-slot-list')).toContainText(
+    'Piața centrală',
+  );
   const buyerContext = await browser.newContext();
   const buyer = await buyerContext.newPage();
   await buyer.goto('http://localhost:5173/login');
@@ -128,6 +137,10 @@ test('producer can register and publish a product visible in the real catalog', 
   await page.goto('/orders');
   const producerOrder = orderCard(page, order);
   await expect(producerOrder).toHaveCount(1);
+  await page
+    .getByLabel('Filtrează după intervalul de ridicare')
+    .selectOption(order.pickup.id);
+  await expect(page).toHaveURL(/pickupSlotId=/);
   for (const status of [
     'Confirmată',
     'În pregătire',

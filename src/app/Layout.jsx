@@ -59,8 +59,15 @@ export function Layout() {
             role="search"
             onSubmit={(event) => {
               event.preventDefault();
-              const q = new FormData(event.currentTarget).get('q');
-              navigate(`/?${new URLSearchParams(q ? { q } : {})}`);
+              const q = new FormData(event.currentTarget).get('q').trim();
+              const next = new URLSearchParams(
+                pathname === '/' ? params : undefined,
+              );
+              if (q) next.set('q', q);
+              else next.delete('q');
+              next.delete('page');
+              const search = next.toString();
+              navigate({ pathname: '/', search });
             }}
           >
             <Search size={18} />
@@ -70,6 +77,7 @@ export function Layout() {
               defaultValue={params.get('q') || ''}
               placeholder="Ce bunătăți cauți astăzi?"
               aria-label="Caută produse"
+              maxLength={100}
             />
             <kbd>↵</kbd>
           </form>
@@ -141,6 +149,9 @@ export function Layout() {
                 Produse locale
               </Link>
               <NavLink to="/producers">Producătorii noștri</NavLink>
+              {user?.role !== 'producer' && (
+                <NavLink to="/assistant">Asistent de cumpărături</NavLink>
+              )}
               <Link to="/#cum-functioneaza">Cum funcționează</Link>
             </div>
             <Link

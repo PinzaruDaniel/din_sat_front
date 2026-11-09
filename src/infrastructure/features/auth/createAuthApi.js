@@ -1,6 +1,13 @@
 export function createAuthApi(http) {
   return {
-    session: () => http.getSession(),
+    async session() {
+      try {
+        return await http.request('/auth/me');
+      } catch (error) {
+        if (error.status === 401) return { user: null };
+        throw error;
+      }
+    },
     login: (input) =>
       http.request('/auth/login', { method: 'POST', body: input }),
     register: (input) =>

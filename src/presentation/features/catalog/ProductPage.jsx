@@ -3,10 +3,16 @@ import { Link, useParams } from 'react-router-dom';
 import { MapPin, ArrowLeft, ShoppingBag, Leaf, Check } from 'lucide-react';
 import { useServices } from '../../shared/hooks/ServicesContext.js';
 import { useResource } from '../../shared/hooks/useResource.js';
-import { ErrorState, Loading } from '../../shared/ui/Feedback.jsx';
+import {
+  BackToShop,
+  EmptyState,
+  ErrorState,
+  Loading,
+} from '../../shared/ui/Feedback.jsx';
 import { Button } from '../../shared/ui/Button.jsx';
 import { useCart } from '../cart/CartContext.js';
 import { money } from '../../../shared/lib/format.js';
+import { productImageUrl } from '../../../shared/lib/productImageUrl.js';
 export function ProductPage() {
   const { id } = useParams();
   const { catalog } = useServices();
@@ -17,6 +23,17 @@ export function ProductPage() {
   );
   const { data: product, loading, error, reload } = useResource(load);
   if (loading) return <Loading />;
+  if (error?.status === 404)
+    return (
+      <section className="container page-section">
+        <EmptyState
+          title="Produs indisponibil"
+          text="Produsul nu mai face parte din oferta curentă."
+        >
+          <BackToShop />
+        </EmptyState>
+      </section>
+    );
   if (error) return <ErrorState error={error} onRetry={reload} />;
   return (
     <section className="container page-section">
@@ -24,7 +41,7 @@ export function ProductPage() {
         <ArrowLeft size={15} /> Înapoi la bunătăți
       </Link>
       <div className="product-detail">
-        <img src={product.imageUrl} alt={product.title} />
+        <img src={productImageUrl(product.imageUrl)} alt={product.title} />
         <div>
           <span className="eyebrow">CRESCUT CU GRIJĂ, APROAPE DE TINE</span>
           <h1>{product.title}</h1>
@@ -37,7 +54,10 @@ export function ProductPage() {
           </p>
           <p className="detail-description">{product.description}</p>
           <p className="detail-price">
-            {money(product.priceAmount)} <span>lei / {product.unit}</span>
+            {money(product.priceAmount)}{' '}
+            <span>
+              {product.currency} / {product.unit}
+            </span>
           </p>
           <p className="stock">
             <Check size={15} />

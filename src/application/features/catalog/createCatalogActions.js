@@ -3,7 +3,10 @@ export function createCatalogActions(api) {
   return {
     list: api.list,
     details: api.details,
-    producers: api.producers,
+    owned: api.owned,
     create: api.create,
+    update: api.update,
+    archive: api.archive,
+    upload: api.upload,
   };
 }

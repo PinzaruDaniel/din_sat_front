@@ -8,14 +8,22 @@ export function pickupLabel(slot) {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-  }).format(new Date(slot.startsAt));
-  const time = (value) =>
-    new Intl.DateTimeFormat('ro-MD', {
-      timeZone: slot.timeZone,
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(value));
-  return `${date}, ${time(slot.startsAt)}–${time(slot.endsAt)} · ${slot.location}`;
+    year: 'numeric',
+  });
+  const time = new Intl.DateTimeFormat('ro-MD', {
+    timeZone: slot.timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const start = new Date(slot.startsAt);
+  const end = new Date(slot.endsAt);
+  const startDate = date.format(start);
+  const endDate = date.format(end);
+  const endLabel =
+    startDate === endDate
+      ? time.format(end)
+      : `${endDate}, ${time.format(end)}`;
+  return `${startDate}, ${time.format(start)}–${endLabel} (${slot.timeZone}) · ${slot.location}`;
 }
 export const orderStatuses = {
   new: 'Nouă',

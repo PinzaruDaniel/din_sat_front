@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Plus, ArrowUpRight } from 'lucide-react';
 import { money } from '../../../shared/lib/format.js';
+import { productImageUrl } from '../../../shared/lib/productImageUrl.js';
 export function ProductCard({ product, onAdd }) {
   return (
     <article className="product-card">
       <Link to={`/products/${product.id}`} className="product-image-link">
         <img
           className="product-image"
-          src={product.imageUrl}
+          src={productImageUrl(product.imageUrl)}
           alt={product.title}
           loading="lazy"
         />

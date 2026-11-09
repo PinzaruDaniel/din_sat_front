@@ -192,3 +192,37 @@ it('retains AbortError when a response body is cancelled', async () => {
     name: 'AbortError',
   });
 });
+
+it('rechecks the session after a stale CSRF token without replaying the mutation', async () => {
+  const dispatch = vi.spyOn(window, 'dispatchEvent');
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ user: { id: 'buyer' }, csrfToken: 'old-token' }),
+    })
+    .mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ code: 'CSRF_INVALID' }),
+    })
+    .mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ user: null, csrfToken: 'anonymous-token' }),
+    });
+  vi.stubGlobal('fetch', fetch);
+  const http = createHttpClient({ baseUrl: '/api/v1' });
+  await expect(
+    http.request('/orders', { method: 'POST', body: {} }),
+  ).rejects.toMatchObject({ code: 'CSRF_INVALID' });
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+    '/api/v1/auth/session',
+    '/api/v1/orders',
+    '/api/v1/auth/session',
+  ]);
+  expect(dispatch).toHaveBeenCalledWith(
+    expect.objectContaining({ type: 'dinsat:session-expired' }),
+  );
+});

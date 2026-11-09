@@ -1,0 +1,64 @@
+.producer-stats {
+  margin-block: 2.5rem;
+  min-width: 0;
+}
+
+.producer-stats-filter,
+.producer-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.875rem;
+  margin-block: 1rem;
+}
+
+.producer-stats-filter {
+  align-items: start;
+  max-width: 38rem;
+}
+
+.producer-stats-filter .field {
+  margin: 0;
+  min-width: 0;
+}
+
+.producer-stats-filter .button {
+  margin-top: 1.25rem;
+}
+
+.producer-stats-period {
+  overflow-wrap: anywhere;
+}
+
+.producer-stats-cards > div {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fffefa;
+  overflow-wrap: anywhere;
+}
+
+.producer-stats-cards dt {
+  margin-bottom: 0.35rem;
+}
+
+.producer-stats-cards dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.producer-stats h3 {
+  margin-block: 1rem 0.5rem;
+}
+
+.producer-stats-products {
+  padding-inline-start: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 36rem) {
+  .producer-stats-filter .button {
+    margin-top: 0;
+  }
+}

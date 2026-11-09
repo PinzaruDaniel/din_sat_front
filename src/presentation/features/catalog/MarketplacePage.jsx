@@ -33,7 +33,7 @@ const categories = [
 ];
 export function MarketplacePage() {
   const [params, setParams] = useSearchParams();
-  const { catalog } = useServices();
+  const { catalog, producers } = useServices();
   const { add } = useCart();
   const query = params.toString();
   const load = useCallback(
@@ -42,6 +42,16 @@ export function MarketplacePage() {
     [catalog, query],
   );
   const { data, loading, error, reload } = useResource(load);
+  const { data: producerData } = useResource(producers.list);
+  const locality = params.get('locality') || '';
+  const localities = [
+    ...new Set(
+      [
+        locality,
+        ...(producerData?.items.map((producer) => producer.locality) ?? []),
+      ].filter(Boolean),
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'ro'));
   const filtered =
     params.has('q') ||
     params.has('category') ||
@@ -193,15 +203,23 @@ export function MarketplacePage() {
               <span className="sr-only">Localitate</span>
               <select
                 aria-label="Filtrează după localitate"
-                value={params.get('locality') || ''}
+                value={locality}
                 onChange={(event) => filter('locality', event.target.value)}
               >
                 <option value="">Toată Moldova</option>
-                <option>Ialoveni</option>
-                <option>Orhei</option>
-                <option>Strășeni</option>
+                {localities.map((name) => (
+                  <option key={name}>{name}</option>
+                ))}
               </select>
             </label>
+            {query && (
+              <button
+                className="button button-secondary"
+                onClick={() => setParams({})}
+              >
+                Resetează filtrele
+              </button>
+            )}
             <label>
               <span className="sr-only">Sortează produsele</span>
               <select
@@ -270,14 +288,7 @@ export function MarketplacePage() {
             )}
           </>
         ) : (
-          <EmptyState>
-            <button
-              className="button button-secondary"
-              onClick={() => setParams({})}
-            >
-              Resetează filtrele
-            </button>
-          </EmptyState>
+          <EmptyState />
         )}
       </section>
       <section className="story-banner container">

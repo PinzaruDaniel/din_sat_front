@@ -7,13 +7,18 @@ import { AuthPage } from '../../presentation/features/auth/AuthPage.jsx';
 import { ProductPage } from '../../presentation/features/catalog/ProductPage.jsx';
 import { ProducersPage } from '../../presentation/features/producers/ProducersPage.jsx';
 import { ProducerDashboard } from '../../presentation/features/producers/ProducerDashboard.jsx';
+import { ProducerDashboardStats } from '../../presentation/features/dashboard/ProducerDashboardStats.jsx';
 import { CartPage } from '../../presentation/features/cart/CartPage.jsx';
-import { OrdersPage } from '../../presentation/features/orders/OrdersPage.jsx';
+import {
+  OrderDetailsPage,
+  OrdersPage,
+} from '../../presentation/features/orders/OrdersPage.jsx';
 import {
   EmptyState,
   BackToShop,
 } from '../../presentation/shared/ui/Feedback.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
+import { AssistantPage } from '../../presentation/features/ai/AssistantPage.jsx';
 function NotFound() {
   return (
     <EmptyState
@@ -39,8 +44,12 @@ export function AppRouter() {
           <Route path="producers" element={<ProducersPage />} />
           <Route path="producers/:id" element={<ProducersPage />} />
           <Route path="cart" element={<CartPage />} />
+          <Route element={<ProtectedRoute role="buyer" />}>
+            <Route path="assistant" element={<AssistantPage />} />
+          </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders/:id" element={<OrderDetailsPage />} />
           </Route>
           <Route element={<ProtectedRoute role="producer" />}>
             <Route path="producer" element={<ProducerPage />} />
@@ -56,7 +65,8 @@ function ProducerPage() {
   const { user } = useAuth();
   return (
     <ProducerDashboard>
-      <ProducerPickupSection producerId={user.id} />
+      <ProducerDashboardStats key={user.id} />
+      <ProducerPickupSection />
     </ProducerDashboard>
   );
 }

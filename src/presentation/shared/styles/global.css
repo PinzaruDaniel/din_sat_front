@@ -634,6 +634,7 @@ textarea:focus {
 }
 .catalog-selects {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: center;
 }
@@ -1365,6 +1366,10 @@ textarea:focus {
   font-size: 22px;
   color: inherit;
 }
+.toast .cart-replacement-action {
+  font-size: inherit;
+  text-decoration: underline;
+}
 .product-detail {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1682,6 +1687,28 @@ textarea:focus {
   padding: 10px 14px;
   min-height: 38px;
   font-size: 10px;
+}
+.order-heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.order-heading > span:first-child {
+  overflow-wrap: anywhere;
+}
+.order-filter {
+  max-width: 34rem;
+  margin-bottom: 20px;
+}
+.order-cancel-confirmation {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.order-cancel-confirmation p {
+  flex-basis: 100%;
 }
 .dashboard-actions {
   display: flex;
@@ -2985,6 +3012,19 @@ textarea:focus {
   white-space: nowrap;
   color: #7c8c65;
 }
+.pickup-section h3 {
+  margin: 20px 0 10px;
+}
+.pickup-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pickup-list .button {
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: inherit;
+}
 @media (max-width: 560px) {
   .input-wrap input {
     font-size: 16px;
@@ -2996,6 +3036,7 @@ textarea:focus {
   .pickup-list > div {
     align-items: flex-start;
     font-size: 10px;
+    flex-wrap: wrap;
   }
   .pickup-list svg {
     flex-shrink: 0;

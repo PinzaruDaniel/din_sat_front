@@ -1,0 +1,25 @@
+.producer-products-heading {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.producer-product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 8px;
+}
+
+.producer-product-preview {
+  display: block;
+  width: min(200px, 100%);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 7px;
+  margin-bottom: 16px;
+}
+
+.product-form .dashboard-actions {
+  flex-wrap: wrap;
+}

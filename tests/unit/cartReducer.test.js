@@ -10,6 +10,22 @@ const product = {
   availableQuantity: 3,
 };
 describe('cart rules', () => {
+  it('replaces the basket only with a valid single-producer selection', () => {
+    const state = cartReducer([], { type: 'add', product });
+    const replacement = { ...product, id: 'b', producerId: 'other' };
+    expect(
+      cartReducer(state, {
+        type: 'replace',
+        items: [state[0], { product: replacement, quantity: 1 }],
+      }),
+    ).toBe(state);
+    expect(
+      cartReducer(state, {
+        type: 'replace',
+        items: [{ product: replacement, quantity: 2 }],
+      }),
+    ).toEqual([{ product: replacement, quantity: 2 }]);
+  });
   it('keeps one producer and respects stock', () => {
     let cart = cartReducer([], { type: 'add', product });
     expect(

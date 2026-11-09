@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
   ErrorState,
 } from '../../shared/ui/Feedback.jsx';
 import { Button } from '../../shared/ui/Button.jsx';
+import { productImageUrl } from '../../../shared/lib/productImageUrl.js';
 import { money, pickupLabel } from '../../../shared/lib/format.js';
 export function CartPage() {
   const cart = useCart();
@@ -33,7 +34,7 @@ export function CartPage() {
         </EmptyState>
       </div>
     );
-  return <Checkout />;
+  return <Checkout key={cart.items[0].product.producerId} />;
 }
 function Checkout() {
   const { items, total, dispatch } = useCart();
@@ -46,14 +47,30 @@ function Checkout() {
     [pickup, producerId],
   );
   const { data, loading, error, reload } = useResource(load);
+  const [point, setPoint] = useState('');
   const [slotId, setSlotId] = useState('');
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const intent = useRef({ payload: '', key: '' });
+  const active = useRef(true);
+  useEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
+  const slots = data?.items ?? [];
+  const points = [...new Set(slots.map((slot) => slot.location))];
+  const selectedPoint = points.length === 1 ? points[0] : point;
+  const pointSlots = slots.filter((slot) => slot.location === selectedPoint);
+  const selectedSlot = pointSlots.find(
+    (slot) => slot.id === slotId && slot.capacity > 0,
+  );
   async function checkout(event) {
     event.preventDefault();
+    if (pending) return;
     if (!user) return navigate('/login?redirect=/cart');
-    if (!slotId) return setSubmitError('Alege un interval de ridicare.');
+    if (!selectedSlot) return setSubmitError('Alege un interval de ridicare.');
     const input = {
       items: items.map((item) => ({
         productId: item.product.id,
@@ -68,13 +85,28 @@ function Checkout() {
     setPending(true);
     setSubmitError('');
     try {
-      await orders.create(input, intent.current.key);
+      const order = await orders.create(input, intent.current.key);
+      if (!active.current) return;
       dispatch({ type: 'clear' });
-      navigate('/orders?created=true');
+      navigate(`/orders?${new URLSearchParams({ created: order.id })}`, {
+        state: {
+          confirmedOrder: {
+            id: order.id,
+            buyerId: user.id,
+            totalAmount: order.totalAmount,
+          },
+        },
+      });
     } catch (error) {
+      if (!active.current) return;
       setSubmitError(error.message);
+      if (error.code === 'SLOT_UNAVAILABLE') {
+        setSlotId('');
+        intent.current = { payload: '', key: '' };
+        reload();
+      }
     } finally {
-      setPending(false);
+      if (active.current) setPending(false);
     }
   }
   return (
@@ -100,7 +132,10 @@ function Checkout() {
           </div>
           {items.map(({ product, quantity }) => (
             <article className="cart-item" key={product.id}>
-              <img src={product.imageUrl} alt={product.title} />
+              <img
+                src={productImageUrl(product.imageUrl)}
+                alt={product.title}
+              />
               <div>
                 <Link to={`/products/${product.id}`}>{product.title}</Link>
                 <span>
@@ -122,7 +157,10 @@ function Checkout() {
                   </button>
                   <span>{quantity}</span>
                   <button
-                    disabled={pending || quantity >= product.availableQuantity}
+                    disabled={
+                      pending ||
+                      quantity >= Math.min(product.availableQuantity, 1000)
+                    }
                     aria-label={`Crește cantitatea ${product.title}`}
                     onClick={() =>
                       dispatch({
@@ -152,6 +190,29 @@ function Checkout() {
         </div>
         <form className="checkout-summary" onSubmit={checkout}>
           <h2>Mai aproape de masa ta.</h2>
+          {points.length > 1 && (
+            <>
+              <label className="slot-label" htmlFor="pickup-point">
+                Punct de ridicare
+              </label>
+              <select
+                id="pickup-point"
+                value={point}
+                disabled={pending}
+                onChange={(event) => {
+                  setPoint(event.target.value);
+                  setSlotId('');
+                }}
+              >
+                <option value="">Alege punctul</option>
+                {points.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
           <label className="slot-label" htmlFor="pickup">
             <MapPin size={16} /> Alege ridicarea
           </label>
@@ -160,21 +221,26 @@ function Checkout() {
           ) : (
             <select
               id="pickup"
-              value={slotId}
+              value={selectedSlot?.id ?? ''}
               onChange={(event) => setSlotId(event.target.value)}
-              disabled={loading || pending}
+              disabled={loading || pending || !selectedPoint}
             >
               <option value="">
                 {loading ? 'Încărcăm intervalele…' : 'Alege un interval'}
               </option>
-              {data?.items.map((slot) => (
-                <option key={slot.id} value={slot.id}>
+              {pointSlots.map((slot) => (
+                <option
+                  key={slot.id}
+                  value={slot.id}
+                  disabled={slot.capacity < 1}
+                >
                   {pickupLabel(slot)}
+                  {slot.capacity < 1 ? ' · Ocupat' : ''}
                 </option>
               ))}
             </select>
           )}
-          {data?.items.length === 0 && (
+          {data && !slots.some((slot) => slot.capacity > 0) && (
             <p className="field-error">
               Producătorul nu are încă intervale de ridicare disponibile.
             </p>
@@ -201,7 +267,7 @@ function Checkout() {
               type="submit"
               className="full-width"
               loading={pending}
-              disabled={!!user && (!slotId || loading || !!error)}
+              disabled={!!user && (!selectedSlot || loading || !!error)}
             >
               {user ? 'Confirmă comanda' : 'Autentifică-te pentru a comanda'}
               <ArrowRight size={17} />
