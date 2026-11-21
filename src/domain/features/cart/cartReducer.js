@@ -67,7 +67,8 @@ export function cartTotal(items) {
   return (
     items.reduce(
       (sum, item) =>
-        sum + Number(item.product.priceAmount.replace('.', '')) * item.quantity,
+        sum +
+        Math.round(Number(item.product.priceAmount) * 100) * item.quantity,
       0,
     ) / 100
   );

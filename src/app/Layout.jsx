@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Link,
   NavLink,
@@ -27,9 +27,24 @@ export function Layout() {
   const { count } = useCart();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const [menu, setMenu] = useState(false);
   const [error, setError] = useState('');
+  useEffect(() => {
+    if (hash) {
+      const target = document.getElementById(hash.slice(1));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+  const hasCatalogFilter =
+    params.has('q') ||
+    params.has('category') ||
+    params.has('locality') ||
+    params.has('producerId');
   async function signOut() {
     try {
       await logout();
@@ -138,13 +153,19 @@ export function Layout() {
             <div className="nav-links">
               <Link
                 to="/"
-                className={pathname === '/' && !params.size ? 'active' : ''}
+                className={
+                  pathname === '/' && !hash && !hasCatalogFilter ? 'active' : ''
+                }
               >
                 Descoperă
               </Link>
               <Link
-                to="/?category=legume"
-                className={pathname === '/' && params.size ? 'active' : ''}
+                to="/#produse"
+                className={
+                  pathname === '/' && (hash === '#produse' || hasCatalogFilter)
+                    ? 'active'
+                    : ''
+                }
               >
                 Produse locale
               </Link>
@@ -152,7 +173,16 @@ export function Layout() {
               {user?.role !== 'producer' && (
                 <NavLink to="/assistant">Asistent de cumpărături</NavLink>
               )}
-              <Link to="/#cum-functioneaza">Cum funcționează</Link>
+              <Link
+                to="/#cum-functioneaza"
+                className={
+                  pathname === '/' && hash === '#cum-functioneaza'
+                    ? 'active'
+                    : ''
+                }
+              >
+                Cum funcționează
+              </Link>
             </div>
             <Link
               className="producer-link"
@@ -162,7 +192,10 @@ export function Layout() {
                   : '/register?role=producer'
               }
             >
-              Ești producător? <ArrowUpRight size={16} />
+              {user?.role === 'producer'
+                ? 'Panou producător'
+                : 'Ești producător?'}{' '}
+              <ArrowUpRight size={16} />
             </Link>
           </nav>
         </div>
@@ -214,7 +247,7 @@ export function Layout() {
             © {new Date().getFullYear()} DinSat. Cu rădăcini în Moldova.
           </span>
           <span className="demo-label">
-            Versiune demo · datele se resetează la repornire
+            Piață locală · ridicare direct de la producător
           </span>
           <span>Bun de la noi. ♡</span>
         </div>

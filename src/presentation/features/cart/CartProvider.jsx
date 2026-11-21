@@ -1,14 +1,29 @@
-import { useReducer, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import {
   cartReducer,
   initialCart,
   cartTotal,
 } from '../../../domain/features/cart/cartReducer.js';
+import {
+  readStoredCart,
+  writeStoredCart,
+} from '../../../infrastructure/features/cart/cartStorage.js';
 import { CartContext } from './CartContext.js';
-export function CartProvider({ children }) {
-  const [items, dispatch] = useReducer(cartReducer, initialCart);
+
+export function CartProvider({ children, ownerId = null }) {
+  const [items, dispatch] = useReducer(cartReducer, ownerId, (id) =>
+    readStoredCart(id, initialCart),
+  );
   const [notice, setNotice] = useState('');
   const [replacement, setReplacement] = useState(null);
+  useEffect(() => {
+    writeStoredCart(ownerId, items);
+  }, [items, ownerId]);
+  useEffect(() => {
+    if (!notice || replacement) return;
+    const timer = setTimeout(() => setNotice(''), 5000);
+    return () => clearTimeout(timer);
+  }, [notice, replacement]);
   function add(product) {
     if (product.availableQuantity < 1) return;
     if (items.length && items[0].product.producerId !== product.producerId) {

@@ -46,5 +46,11 @@ describe('cart rules', () => {
     const updated = cartReducer(initial, { type: 'add', product });
     expect(initial[0].quantity).toBe(1);
     expect(cartTotal(updated)).toBe(70.5);
+    expect(
+      cartTotal([
+        { product: { ...product, priceAmount: '25' }, quantity: 2 },
+        { product: { ...product, id: 'b', priceAmount: '12.5' }, quantity: 1 },
+      ]),
+    ).toBe(62.5);
   });
 });

@@ -3,6 +3,7 @@ import { ServicesProvider } from '../../presentation/shared/hooks/ServicesContex
 import { AuthProvider } from '../../presentation/features/auth/AuthProvider.jsx';
 import { useAuth } from '../../presentation/features/auth/AuthContext.js';
 import { CartProvider } from '../../presentation/features/cart/CartProvider.jsx';
+import { clearStoredCart } from '../../infrastructure/features/cart/cartStorage.js';
 import { services } from '../container/services.js';
 function AccountCart({ children }) {
   const { user } = useAuth();
@@ -10,12 +11,17 @@ function AccountCart({ children }) {
   const [ownership, setOwnership] = useState({ userId, revision: 0 });
   if (ownership.userId !== userId) {
     // Keep a guest's basket on first login; clear it on logout or account switch.
+    if (ownership.userId) clearStoredCart();
     setOwnership({
       userId,
       revision: ownership.revision + (ownership.userId ? 1 : 0),
     });
   }
-  return <CartProvider key={ownership.revision}>{children}</CartProvider>;
+  return (
+    <CartProvider key={ownership.revision} ownerId={userId}>
+      {children}
+    </CartProvider>
+  );
 }
 export function AppProviders({ children }) {
   return (

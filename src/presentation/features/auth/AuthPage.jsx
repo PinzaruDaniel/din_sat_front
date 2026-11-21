@@ -36,12 +36,22 @@ export function AuthPage({ registering = false }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const requestedRole = params.get('role');
+  const [syncedRole, setSyncedRole] = useState(requestedRole);
   const [values, setValues] = useState({
     name: '',
     email: '',
     password: '',
-    role: params.get('role') === 'producer' ? 'producer' : 'buyer',
+    role: requestedRole === 'producer' ? 'producer' : 'buyer',
   });
+  if (requestedRole !== syncedRole) {
+    setSyncedRole(requestedRole);
+    if (
+      registering &&
+      (requestedRole === 'producer' || requestedRole === 'buyer')
+    )
+      setValues((current) => ({ ...current, role: requestedRole }));
+  }
   const [visible, setVisible] = useState(false);
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');

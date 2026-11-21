@@ -90,11 +90,16 @@ export function ProducerProductsSection() {
                 alt={product.title}
               />
               {product.active ? (
-                <Link to={`/products/${encodeURIComponent(product.id)}`}>
+                <Link
+                  className="dashboard-product-title"
+                  to={`/products/${encodeURIComponent(product.id)}`}
+                >
                   {product.title}
                 </Link>
               ) : (
-                <strong>{product.title} · Arhivat</strong>
+                <strong className="dashboard-product-title">
+                  {product.title} · Arhivat
+                </strong>
               )}
               <span>
                 {product.availableQuantity} {product.unit} în stoc

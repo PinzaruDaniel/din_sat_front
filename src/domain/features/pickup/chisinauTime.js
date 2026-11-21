@@ -6,10 +6,14 @@ export function chisinauInstant(date, hour) {
     timeZone: 'Europe/Chisinau',
     timeZoneName: 'shortOffset',
   }).formatToParts(noon);
-  const offset = parts.find((part) => part.type === 'timeZoneName').value;
-  const offsetHours = Number(offset.replace('GMT', ''));
+  const offset =
+    parts.find((part) => part.type === 'timeZoneName')?.value ?? '';
+  const match = /^GMT(?:([+-])(\d{1,2})(?::(\d{2}))?)?$/.exec(offset);
+  const sign = match?.[1] === '-' ? -1 : 1;
+  const offsetMinutes =
+    sign * (Number(match?.[2] ?? 0) * 60 + Number(match?.[3] ?? 0));
   return new Date(
     Date.parse(`${date}T${String(hour).padStart(2, '0')}:00:00Z`) -
-      offsetHours * 3600000,
+      offsetMinutes * 60000,
   ).toISOString();
 }

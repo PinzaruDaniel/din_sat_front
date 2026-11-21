@@ -63,7 +63,7 @@ test('Neon PostgreSQL persists a real browser marketplace flow without demo seed
   const product = await submitAndRead(
     page,
     'POST',
-    '/products',
+    '/producer/products',
     page.getByRole('button', { name: 'Publică produsul' }),
   );
   await expect(page.locator('.dashboard-products')).toContainText(title, {

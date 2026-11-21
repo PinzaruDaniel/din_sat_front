@@ -1,6 +1,6 @@
 export function validateCredentials(input, registering = false) {
   const errors = {};
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email))
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim()))
     errors.email = 'Introdu un email valid.';
   if (!input.password) errors.password = 'Introdu parola.';
   if (registering && input.password.length < 12)

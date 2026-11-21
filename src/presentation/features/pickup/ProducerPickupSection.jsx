@@ -172,7 +172,9 @@ function PickupForm({
       }
       onSaved();
     } catch (error) {
-      setSaveError(error.fieldErrors?.startsAt || error.message);
+      const firstFieldError =
+        error.fieldErrors && Object.values(error.fieldErrors).find(Boolean);
+      setSaveError(firstFieldError || error.message);
     } finally {
       setPending(false);
     }
@@ -229,6 +231,7 @@ function PickupForm({
             type="date"
             name="date"
             value={values.date}
+            min={new Date().toISOString().slice(0, 10)}
             onChange={change}
             disabled={pending}
             required

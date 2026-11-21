@@ -216,6 +216,15 @@ export function ProducerProductForm({ product, catalog, onClose, onSaved }) {
       />
       {uploading && <p role="status">Încărcăm imaginea…</p>}
       {uploaded && <p role="status">Imaginea a fost încărcată.</p>}
+      {uploadError && product.id && isPreviewable(values.imageUrl) && (
+        <Button
+          variant="secondary"
+          onClick={() => setUploadError('')}
+          disabled={busy}
+        >
+          Păstrează imaginea actuală
+        </Button>
+      )}
       <Field
         label="Adresa imaginii (HTTPS)"
         type="text"

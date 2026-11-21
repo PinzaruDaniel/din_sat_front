@@ -31,14 +31,30 @@ const categories = [
   { id: 'miere', name: 'Miere', icon: Flower2 },
   { id: 'camara', name: 'Din cămară', icon: Package },
 ];
+const catalogQueryKeys = [
+  'q',
+  'category',
+  'locality',
+  'producerId',
+  'sort',
+  'page',
+  'pageSize',
+];
 export function MarketplacePage() {
   const [params, setParams] = useSearchParams();
   const { catalog, producers } = useServices();
   const { add } = useCart();
   const query = params.toString();
   const load = useCallback(
-    (signal) =>
-      catalog.list(Object.fromEntries(new URLSearchParams(query)), signal),
+    (signal) => {
+      const parsed = new URLSearchParams(query);
+      const allowed = Object.fromEntries(
+        catalogQueryKeys
+          .map((key) => [key, parsed.get(key)])
+          .filter(([, value]) => value !== null && value !== ''),
+      );
+      return catalog.list(allowed, signal);
+    },
     [catalog, query],
   );
   const { data, loading, error, reload } = useResource(load);

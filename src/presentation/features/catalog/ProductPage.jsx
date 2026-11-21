@@ -56,7 +56,8 @@ export function ProductPage() {
           <p className="detail-price">
             {money(product.priceAmount)}{' '}
             <span>
-              {product.currency} / {product.unit}
+              {product.currency === 'MDL' ? 'lei' : product.currency} /{' '}
+              {product.unit}
             </span>
           </p>
           <p className="stock">

@@ -22,7 +22,7 @@
 }
 
 .producer-stats-filter .button {
-  margin-top: 1.25rem;
+  margin-top: 1.75rem;
 }
 
 .producer-stats-period {
@@ -44,7 +44,7 @@
 .producer-stats-cards dd {
   margin: 0;
   font-family: var(--serif);
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
