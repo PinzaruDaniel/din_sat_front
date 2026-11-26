@@ -10,15 +10,22 @@ import {
 } from '../../../infrastructure/features/cart/cartStorage.js';
 import { CartContext } from './CartContext.js';
 
-export function CartProvider({ children, ownerId = null }) {
-  const [items, dispatch] = useReducer(cartReducer, ownerId, (id) =>
-    readStoredCart(id, initialCart),
+export function CartProvider({
+  children,
+  ownerId = null,
+  authLoading = false,
+  clearOnMount = false,
+}) {
+  const [items, dispatch] = useReducer(cartReducer, null, () =>
+    clearOnMount
+      ? initialCart
+      : readStoredCart(ownerId, initialCart, authLoading),
   );
   const [notice, setNotice] = useState('');
   const [replacement, setReplacement] = useState(null);
   useEffect(() => {
-    writeStoredCart(ownerId, items);
-  }, [items, ownerId]);
+    writeStoredCart(ownerId, items, authLoading);
+  }, [items, ownerId, authLoading]);
   useEffect(() => {
     if (!notice || replacement) return;
     const timer = setTimeout(() => setNotice(''), 5000);

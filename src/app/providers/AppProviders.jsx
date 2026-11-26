@@ -3,26 +3,51 @@ import { ServicesProvider } from '../../presentation/shared/hooks/ServicesContex
 import { AuthProvider } from '../../presentation/features/auth/AuthProvider.jsx';
 import { useAuth } from '../../presentation/features/auth/AuthContext.js';
 import { CartProvider } from '../../presentation/features/cart/CartProvider.jsx';
-import { clearStoredCart } from '../../infrastructure/features/cart/cartStorage.js';
+import { readStoredCartOwner } from '../../infrastructure/features/cart/cartStorage.js';
 import { services } from '../container/services.js';
+
 function AccountCart({ children }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const userId = user?.id ?? null;
-  const [ownership, setOwnership] = useState({ userId, revision: 0 });
-  if (ownership.userId !== userId) {
-    // Keep a guest's basket on first login; clear it on logout or account switch.
-    if (ownership.userId) clearStoredCart();
+  const [ownership, setOwnership] = useState(() => ({
+    hydrated: !loading,
+    userId,
+    revision: 0,
+    clear: false,
+  }));
+
+  if (!loading && !ownership.hydrated) {
+    const storedOwner = readStoredCartOwner();
+    const expiredUserCart = Boolean(storedOwner && storedOwner !== userId);
     setOwnership({
+      hydrated: true,
       userId,
-      revision: ownership.revision + (ownership.userId ? 1 : 0),
+      revision: expiredUserCart ? ownership.revision + 1 : ownership.revision,
+      clear: expiredUserCart,
+    });
+  } else if (!loading && ownership.userId !== userId) {
+    // Keep a guest's basket on first login; clear it on logout or account switch.
+    const shouldClear = Boolean(ownership.userId);
+    setOwnership({
+      hydrated: true,
+      userId,
+      revision: shouldClear ? ownership.revision + 1 : ownership.revision,
+      clear: shouldClear,
     });
   }
+
   return (
-    <CartProvider key={ownership.revision} ownerId={userId}>
+    <CartProvider
+      key={ownership.revision}
+      ownerId={userId}
+      authLoading={loading}
+      clearOnMount={ownership.clear}
+    >
       {children}
     </CartProvider>
   );
 }
+
 export function AppProviders({ children }) {
   return (
     <ServicesProvider services={services}>
